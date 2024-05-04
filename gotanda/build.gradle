@@ -24,15 +24,16 @@ dependencies {
     implementation 'io.projectreactor.kotlin:reactor-kotlin-extensions'
     implementation 'org.jetbrains.kotlin:kotlin-reflect'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-reactor'
+    implementation("net.bramp.ffmpeg:ffmpeg:0.8.0")
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'io.projectreactor:reactor-test'
 }
 
-tasks.withType(KotlinCompile) {
-    kotlinOptions {
-        freeCompilerArgs += '-Xjsr305=strict'
-        jvmTarget = '17'
+tasks.withType(KotlinCompile).configureEach {
+    compilerOptions {
+        freeCompilerArgs = ['-Xjsr305=strict']
+        jvmTarget = JvmTarget.JVM_17
     }
 }
 
