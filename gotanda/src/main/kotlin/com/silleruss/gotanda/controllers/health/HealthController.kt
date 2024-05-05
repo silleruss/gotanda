@@ -1,4 +1,4 @@
-package com.silleruss.gotanda.controllers
+package com.silleruss.gotanda.controllers.health
 
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
