@@ -33,7 +33,6 @@ class YtbService(
         return videoInfo
             .map { it.details() }
             .map { it.create() }
-            .also { println(it.toString()) }
             .toMono()
     }
 
