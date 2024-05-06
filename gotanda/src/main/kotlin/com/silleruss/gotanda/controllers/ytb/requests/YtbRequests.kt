@@ -11,5 +11,7 @@ data class GetYtbVideoFormatRequest(
 data class CropYtbVideoRequest(
     val url: String,
     val startTime: Float,
-    val durationTime: Float
+    val durationTime: Float,
+    // TODO: set enum class
+    val fileFormat: String,
 )

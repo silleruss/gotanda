@@ -36,4 +36,4 @@ data class CropVideoResponse(
 
 typealias GetYtbVideoDetailResponse = Mono<VideoDetailResponses>
 typealias GetYtbVideoFormatsResponse = Flux<VideoFormatResponses>
-typealias CreateCropImageResponse = Mono<CropVideoResponse>
+typealias CropYtbVideoResponse = Mono<CropVideoResponse>
