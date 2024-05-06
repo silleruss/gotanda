@@ -31,7 +31,8 @@ data class VideoFormatResponses(
 )
 
 data class CropVideoResponse(
-    val croppedUrl: String,
+    val id: String,
+    val title: String,
 )
 
 typealias GetYtbVideoDetailResponse = Mono<VideoDetailResponses>
