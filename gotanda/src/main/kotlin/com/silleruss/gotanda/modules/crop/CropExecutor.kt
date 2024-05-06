@@ -3,10 +3,12 @@ package com.silleruss.gotanda.modules.crop
 import org.springframework.stereotype.Component
 
 @Component
-class CropExecutor {
+class CropExecutor(
+    private val ffmpegService: FfmpegService,
+) {
 
-    fun execute() {
-        TODO("implement video clipping with ffmpeg")
+    fun execute(payload: CropVideoPayload) {
+        ffmpegService.execute(payload)
     }
 
 }
