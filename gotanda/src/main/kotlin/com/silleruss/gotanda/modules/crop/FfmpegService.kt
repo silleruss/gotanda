@@ -10,42 +10,61 @@ import org.springframework.stereotype.Service
 @Service
 class FfmpegService {
 
-    fun encodeVideo(request: FfmpegEncodeVideoRequest): Result<Unit> {
-        return runCatching {
-            val ffmpeg = FFmpeg(FFMPEG_PATH)
-            val ffProbe = FFprobe(FF_PROBE_PATH)
+    private val ffmpeg = FFmpeg(FFMPEG_PATH)
+    private val ffProbe = FFprobe(FF_PROBE_PATH)
 
-            val builder = request.generate()
+    fun execute(payload: CropVideoPayload) {
+        val executor = FFmpegExecutor(ffmpeg, ffProbe)
+        val builder = build(FFmpegBuilder(),payload)
 
-            val executor = FFmpegExecutor(ffmpeg, ffProbe)
+        executor.createJob(builder).run()
+    }
 
-            // Run a one-pass encode
-            executor.createJob(builder).run()
+    fun execute(request: FfmpegEncodeVideoRequest) {
+        val executor = FFmpegExecutor(ffmpeg, ffProbe)
+        val builder = build(FFmpegBuilder(), request)
 
-            // Or run a two-pass encode (which is better quality at the cost of being slower)
-            executor.createTwoPassJob(builder).run()
-        }.onSuccess {
-            // do something
+        executor.createJob(builder).run()
+    }
+
+    private fun build(
+        builder: FFmpegBuilder,
+        payload: CropVideoPayload,
+    ): FFmpegBuilder {
+        return payload.run {
+            builder
+                .setInput(payload.inputUrl)
+                .overrideOutputFiles(true)
+                .addOutput(payload.outputPath)
+                .setFormat(payload.fileFormat)
+                .addExtraArgs("-ss", payload.startTime.toString())
+                .addExtraArgs("-t", payload.durationTime.toString())
+                .done()
         }
     }
 
-    private fun FfmpegEncodeVideoRequest.generate(): FFmpegBuilder {
-        return FFmpegBuilder()
-            .setInput(input)
-            .overrideOutputFiles(shouldOverride)
-            .addOutput(output)
-            .setFormat(fileFormat)
-            .setTargetSize(targetSize)
-            .let { if (shouldDisableSubtitle) it.disableSubtitle() else it }
-            .setAudioChannels(audioChannel)
-            .setAudioCodec(audioCode)
-            .setAudioSampleRate(audioSampleRate)
-            .setAudioBitRate(audioBitRate)
-            .setVideoCodec(videoCode)
-            .setVideoFrameRate(videoFrameRate, videoFrameRatePer)
-            .setVideoResolution(videoWidth, videoHeight)
-            .setStrict(FFmpegBuilder.Strict.EXPERIMENTAL)
-            .done()
+    private fun build(
+        builder: FFmpegBuilder,
+        request: FfmpegEncodeVideoRequest,
+    ): FFmpegBuilder {
+        return request.run {
+            builder
+                .setInput(input)
+                .overrideOutputFiles(shouldOverride)
+                .addOutput(output)
+                .setFormat(fileFormat)
+                .setTargetSize(targetSize)
+                .let { if (shouldDisableSubtitle) it.disableSubtitle() else it }
+                .setAudioChannels(audioChannel)
+                .setAudioCodec(audioCode)
+                .setAudioSampleRate(audioSampleRate)
+                .setAudioBitRate(audioBitRate)
+                .setVideoCodec(videoCode)
+                .setVideoFrameRate(videoFrameRate, videoFrameRatePer)
+                .setVideoResolution(videoWidth, videoHeight)
+                .setStrict(FFmpegBuilder.Strict.EXPERIMENTAL)
+                .done()
+        }
     }
 
     companion object {
