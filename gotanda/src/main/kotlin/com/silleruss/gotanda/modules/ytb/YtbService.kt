@@ -19,12 +19,15 @@ import com.silleruss.gotanda.core.toOptional
 import com.silleruss.gotanda.exceptions.ytb.CannotExtractYtbUrlException
 import com.silleruss.gotanda.modules.crop.CropExecutor
 import com.silleruss.gotanda.modules.crop.CropVideoPayload
+import org.springframework.core.io.ResourceLoader
 import org.springframework.stereotype.Service
+import java.util.*
 import java.util.regex.Pattern
 
 @Service
 class YtbService(
     private val cropExecutor: CropExecutor,
+    private val resourceLoader: ResourceLoader,
 ) {
 
     private val downloader = YoutubeDownloader()
@@ -49,7 +52,10 @@ class YtbService(
             val format = videoInfo.videoFormats().first()
 
             val targetUrl = format.url()
-            val outputPath = videoInfo.details().generateOutputName()
+
+            // TODO: modify file name patterns e.g. use video title and regex special characters
+            val fileName = "${UUID.randomUUID()}"
+            val outputPath = generateOutputName(fileName)
 
             val payload = CropVideoPayload(targetUrl, outputPath, request.startTime, request.durationTime, request.fileFormat)
 
@@ -57,7 +63,7 @@ class YtbService(
 
             // TODO: upload from
 
-            CropVideoResponse(outputPath)
+            CropVideoResponse(fileName, videoInfo.details().title())
         }.toMono()
     }
 
@@ -95,8 +101,10 @@ class YtbService(
         liveUrl = liveUrl().toOptional(),
     )
 
-    private fun VideoDetails.generateOutputName(): String {
-        return "${kstNow()}_${title()}"
+    // FIXME
+    private fun generateOutputName(value: String): String {
+        // build > resources > temp
+        return "${resourceLoader.getResource("classpath:temp").file.path}\\$value"
     }
 
     private fun Format.create() = VideoFormatResponses(
