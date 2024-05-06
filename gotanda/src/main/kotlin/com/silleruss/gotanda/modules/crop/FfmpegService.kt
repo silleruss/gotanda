@@ -14,10 +14,15 @@ class FfmpegService {
     private val ffProbe = FFprobe(FF_PROBE_PATH)
 
     fun execute(payload: CropVideoPayload) {
-        val executor = FFmpegExecutor(ffmpeg, ffProbe)
-        val builder = build(FFmpegBuilder(),payload)
+        runCatching {
+            val executor = FFmpegExecutor(ffmpeg, ffProbe)
+            val builder = build(FFmpegBuilder(),payload)
 
-        executor.createJob(builder).run()
+            executor.createJob(builder).run()
+        }.onFailure {
+            // FIXME
+            println("Failed: ${it.message}")
+        }
     }
 
     fun execute(request: FfmpegEncodeVideoRequest) {
@@ -35,7 +40,7 @@ class FfmpegService {
             builder
                 .setInput(payload.inputUrl)
                 .overrideOutputFiles(true)
-                .addOutput(payload.outputPath)
+                .addOutput("${payload.outputPath}.${payload.fileFormat}")
                 .setFormat(payload.fileFormat)
                 .addExtraArgs("-ss", payload.startTime.toString())
                 .addExtraArgs("-t", payload.durationTime.toString())
