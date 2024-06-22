@@ -1,27 +1,37 @@
-package com.silleruss.gotanda.modules.crop
+package com.silleruss.gotanda.modules.crop.services
 
+import arrow.core.Either
+import arrow.core.raise.either
+import arrow.core.raise.ensure
+import com.silleruss.gotanda.exceptions.ffmpeg.CannotCropVideoException
 import com.silleruss.gotanda.models.FfmpegEncodeVideoRequest
+import com.silleruss.gotanda.modules.crop.CropVideoPayload
 import net.bramp.ffmpeg.FFmpeg
 import net.bramp.ffmpeg.FFmpegExecutor
 import net.bramp.ffmpeg.FFprobe
 import net.bramp.ffmpeg.builder.FFmpegBuilder
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
-class FfmpegService {
+class FfmpegService(
+    @Value("\${ffmpeg.path}") private val path: String,
+    @Value("\${ffprobe.path}") private val provePath: String,
+) {
 
-    private val ffmpeg = FFmpeg(FFMPEG_PATH)
-    private val ffProbe = FFprobe(FF_PROBE_PATH)
+    private val ffmpeg = FFmpeg(path)
+    private val ffProbe = FFprobe(provePath)
 
-    fun execute(payload: CropVideoPayload) {
-        runCatching {
+    fun execute(payload: CropVideoPayload): Either<Throwable, Unit> {
+        return either {
+            ensure(payload.canCropVideo()) {
+                CannotCropVideoException(payload)
+            }
+
             val executor = FFmpegExecutor(ffmpeg, ffProbe)
             val builder = build(FFmpegBuilder(),payload)
 
             executor.createJob(builder).run()
-        }.onFailure {
-            // FIXME
-            println("Failed: ${it.message}")
         }
     }
 
