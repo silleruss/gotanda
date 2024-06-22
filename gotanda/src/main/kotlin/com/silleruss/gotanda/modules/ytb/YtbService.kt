@@ -12,7 +12,6 @@ import com.silleruss.gotanda.controllers.ytb.requests.CropYtbVideoRequest
 import com.silleruss.gotanda.controllers.ytb.requests.GetYtbVideoDetailRequest
 import com.silleruss.gotanda.controllers.ytb.requests.GetYtbVideoFormatRequest
 import com.silleruss.gotanda.controllers.ytb.responses.*
-import com.silleruss.gotanda.core.kstNow
 import com.silleruss.gotanda.core.toFlux
 import com.silleruss.gotanda.core.toMono
 import com.silleruss.gotanda.core.toOptional
@@ -22,10 +21,10 @@ import com.silleruss.gotanda.modules.crop.CropVideoPayload
 import org.springframework.core.io.ResourceLoader
 import org.springframework.stereotype.Service
 import java.util.*
-import java.util.regex.Pattern
 
 @Service
 class YtbService(
+    private val validator: YtbHelper,
     private val cropExecutor: CropExecutor,
     private val resourceLoader: ResourceLoader,
 ) {
@@ -69,13 +68,13 @@ class YtbService(
 
     private fun extractVideoDataFromUrl(url: String): Either<Throwable, VideoInfo> {
         return either {
-            val ytbMatcher = Pattern.compile(YOUTUBE_URL_REGEX).matcher(url)
+            val matcher = validator.generateValidMatcher(url)
 
-            ensure(ytbMatcher.find()) {
+            ensure(matcher.find()) {
                 CannotExtractYtbUrlException(url)
             }
 
-            val videoId = ytbMatcher.group()
+            val videoId = matcher.group()
             val ytbRequest = RequestVideoInfo(videoId)
             val videoInfo = downloader.getVideoInfo(ytbRequest)
 
@@ -118,11 +117,5 @@ class YtbService(
         approxDurationMs = duration(),
         clientVersion = clientVersion(),
     )
-
-    companion object {
-
-        private const val YOUTUBE_URL_REGEX = "(?<=watch\\?v=|/videos/|embed\\/|youtu.be\\/|\\/v\\/|\\/e\\/|watch\\?v%3D|watch\\?feature=player_embedded&v=|%2Fvideos%2F|embed%\u200C\u200B2F|youtu.be%2F|%2Fv%2F)[^#\\&\\?\\n]*"
-
-    }
 
 }
