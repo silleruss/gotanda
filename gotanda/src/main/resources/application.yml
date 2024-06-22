@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: gotanda
+
+ffmpeg:
+  path:
+
+ffprobe:
+  path:
