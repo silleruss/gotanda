@@ -6,4 +6,14 @@ data class CropVideoPayload(
     val startTime: Float,
     val durationTime: Float,
     val fileFormat: String,
-)
+) {
+
+    fun canCropVideo(): Boolean {
+        return when {
+            inputUrl.isBlank() || fileFormat.isBlank()
+                    || startTime.isNaN() || durationTime.isNaN() || durationTime == 0f -> false
+            else -> true
+        }
+    }
+
+}
