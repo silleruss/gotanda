@@ -1,7 +1,9 @@
 package com.silleruss.gotanda.controllers.ytb.responses
 
 import com.github.kiulian.downloader.model.Extension
+import com.github.kiulian.downloader.model.videos.formats.Format
 import com.github.kiulian.downloader.model.videos.formats.Itag
+import com.silleruss.gotanda.core.toOptional
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import java.util.*
@@ -28,7 +30,25 @@ data class VideoFormatResponses(
     val lastModified: Long,
     val approxDurationMs: Long,
     val clientVersion: String,
-)
+) {
+
+    companion object {
+        fun from(format: Format) = format.run {
+            VideoFormatResponses(
+                iTag = itag(),
+                url = url(),
+                mimeType = mimeType(),
+                extension = extension(),
+                bitrate = bitrate(),
+                contentLength = contentLength().toOptional(),
+                lastModified = lastModified(),
+                approxDurationMs = duration(),
+                clientVersion = clientVersion(),
+            )
+        }
+    }
+
+}
 
 data class CropVideoResponse(
     val id: String,
