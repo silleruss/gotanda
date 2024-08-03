@@ -2,6 +2,11 @@ spring:
   application:
     name: gotanda
 
+management:
+  endpoints:
+    web:
+      base-path: "/actuator"
+
 ffmpeg:
   path:
 
