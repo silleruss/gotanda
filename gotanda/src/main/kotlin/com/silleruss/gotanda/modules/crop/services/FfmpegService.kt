@@ -1,11 +1,8 @@
 package com.silleruss.gotanda.modules.crop.services
 
-import arrow.core.Either
-import arrow.core.raise.either
-import arrow.core.raise.ensure
-import com.silleruss.gotanda.exceptions.ffmpeg.CannotCropVideoException
 import com.silleruss.gotanda.models.FfmpegEncodeVideoRequest
 import com.silleruss.gotanda.modules.crop.CropVideoPayload
+import kotlinx.coroutines.*
 import net.bramp.ffmpeg.FFmpeg
 import net.bramp.ffmpeg.FFmpegExecutor
 import net.bramp.ffmpeg.FFprobe
@@ -21,25 +18,22 @@ class FfmpegService(
 
     private val ffmpeg = FFmpeg(path)
     private val ffProbe = FFprobe(provePath)
+    private val executor = FFmpegExecutor(ffmpeg, ffProbe)
 
-    fun execute(payload: CropVideoPayload): Either<Throwable, Unit> {
-        return either {
-            ensure(payload.canCropVideo()) {
-                CannotCropVideoException(payload)
-            }
-
-            val executor = FFmpegExecutor(ffmpeg, ffProbe)
+    suspend fun execute(payload: CropVideoPayload): Deferred<Unit> {
+        return CoroutineScope(Dispatchers.IO).async {
             val builder = build(FFmpegBuilder(),payload)
 
             executor.createJob(builder).run()
         }
     }
 
-    fun execute(request: FfmpegEncodeVideoRequest) {
-        val executor = FFmpegExecutor(ffmpeg, ffProbe)
-        val builder = build(FFmpegBuilder(), request)
+    fun execute(request: FfmpegEncodeVideoRequest): Deferred<Unit> {
+        return CoroutineScope(Dispatchers.IO).async {
+            val builder = build(FFmpegBuilder(), request)
 
-        executor.createJob(builder).run()
+            executor.createJob(builder).run()
+        }
     }
 
     private fun build(

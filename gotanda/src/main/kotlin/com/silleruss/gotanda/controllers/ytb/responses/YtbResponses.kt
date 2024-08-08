@@ -1,5 +1,6 @@
 package com.silleruss.gotanda.controllers.ytb.responses
 
+import arrow.core.Either
 import com.github.kiulian.downloader.model.Extension
 import com.github.kiulian.downloader.model.videos.formats.Format
 import com.github.kiulian.downloader.model.videos.formats.Itag
@@ -57,4 +58,5 @@ data class CropVideoResponse(
 
 typealias GetYtbVideoDetailResponse = Mono<VideoDetailResponses>
 typealias GetYtbVideoFormatsResponse = Flux<VideoFormatResponses>
-typealias CropYtbVideoResponse = Mono<CropVideoResponse>
+
+typealias CropYtbVideoResponse = Either<Throwable, CropVideoResponse>

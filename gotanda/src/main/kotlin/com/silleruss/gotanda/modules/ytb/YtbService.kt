@@ -1,6 +1,7 @@
 package com.silleruss.gotanda.modules.ytb
 
 import arrow.core.raise.either
+import arrow.core.raise.ensure
 import com.github.kiulian.downloader.model.videos.VideoDetails
 import com.silleruss.gotanda.controllers.ytb.requests.CropYtbVideoRequest
 import com.silleruss.gotanda.controllers.ytb.requests.GetYtbVideoDetailRequest
@@ -9,6 +10,7 @@ import com.silleruss.gotanda.controllers.ytb.responses.*
 import com.silleruss.gotanda.core.toFlux
 import com.silleruss.gotanda.core.toMono
 import com.silleruss.gotanda.core.toOptional
+import com.silleruss.gotanda.exceptions.ffmpeg.CannotCropVideoException
 import com.silleruss.gotanda.modules.crop.CropExecutor
 import com.silleruss.gotanda.modules.crop.CropVideoPayload
 import org.springframework.core.io.ResourceLoader
@@ -21,7 +23,6 @@ class YtbService(
     private val cropExecutor: CropExecutor,
     private val resourceLoader: ResourceLoader,
 ) {
-
 
     fun getVideoDetail(request: GetYtbVideoDetailRequest): GetYtbVideoDetailResponse {
         val videoInfo = extractor.extractVideoDataFromUrl(request.url)
@@ -39,7 +40,7 @@ class YtbService(
             .toFlux()
     }
 
-    fun cropVideo(request: CropYtbVideoRequest): CropYtbVideoResponse {
+    suspend fun cropVideo(request: CropYtbVideoRequest): CropYtbVideoResponse {
         return either {
             val videoInfo = extractor.extractVideoDataFromUrl(request.url).bind()
             // TODO: found a best format
@@ -53,12 +54,16 @@ class YtbService(
 
             val payload = CropVideoPayload(targetUrl, outputPath, request.startTime, request.durationTime, request.fileFormat)
 
-            cropExecutor.execute(payload)
+            ensure(payload.canCropVideo()) {
+                CannotCropVideoException(payload)
+            }
+
+            cropExecutor.execute(payload).bind()
 
             // TODO: upload from
 
             CropVideoResponse(fileName, videoInfo.details().title())
-        }.toMono()
+        }
     }
 
     private fun VideoDetails.create() = VideoDetailResponses(

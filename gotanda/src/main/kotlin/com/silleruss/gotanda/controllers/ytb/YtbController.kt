@@ -26,7 +26,7 @@ class YtbController(
     }
 
     @PostMapping("/video/crop")
-    fun cropVideo(@RequestBody request: CropYtbVideoRequest): CropYtbVideoResponse {
+    suspend fun cropVideo(@RequestBody request: CropYtbVideoRequest): CropYtbVideoResponse {
         return service.cropVideo(request)
     }
 
